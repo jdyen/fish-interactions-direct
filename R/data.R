@@ -218,7 +218,11 @@ define_predictors <- function(x, target) {
     left_join(
       x |>
         filter(species %in% c("Carp Goldfish", "Perca fluviatilis")) |>
-        group_by(waterbody, id_site, survey_year, species, gear_type, reach_no) |>
+        mutate(
+          category = gsub("huge", "large", category),
+          category = gsub("tiny|medium", "small", category)
+        ) |>
+        group_by(waterbody, id_site, survey_year, species, category, gear_type, reach_no) |>
         summarise(cpue = sum(catch) / median(effort_h)) |>
         mutate(
           species = gsub("Perca fluviatilis", "redfin", species),
@@ -227,7 +231,7 @@ define_predictors <- function(x, target) {
         pivot_wider(
           id_cols = c(waterbody, id_site, survey_year, gear_type, reach_no),
           values_from = cpue,
-          names_from = species,
+          names_from = c(species, category),
           names_prefix = "cpue_"
         ),
       by = c("waterbody", "id_site", "survey_year", "gear_type", "reach_no")
